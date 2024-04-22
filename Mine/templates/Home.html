@@ -1,0 +1,79 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home page</title>
+    <link rel="stylesheet" href="{% static 'CSS/home.css' %}">
+</head>
+<body>
+<div class="lat">
+    <header >
+        <div class="beat b">
+            <img class="head" src="{% static 'images/logo.jpg' %}" alt="">
+        </div>
+        <div class="beat"><p class="logo"><u>KELV'S WEB SOLUTIONS</u></p></div>
+    </header>
+<p class="links">
+    <span class="up"><a href="">Home</a></span>
+    <span class="up"><a href="/about/">About</a></span>
+    <span class="up"><a href="/services/">Services</a></span>
+    <span class="up"><a href="/contact/">Contact</a></span>
+    <span class="up"><a href="/projects/">Projects</a></span>
+</p>
+</div>
+<br><br>
+<hr>
+<hr>
+<div class="lean">
+    <center>
+    <form action="">
+        <input  type="search"placeholder="Search for anything">
+    </form>
+        </center>
+</div>
+<br><br>
+<hr>
+    <h2 class="quali">DRIVERS</h2>
+<div class="trip">
+    <div class="web">
+        <h3>MOTTO</h3>
+        <p>Small habits build great successes</p>
+    </div>
+    <div class="web">
+        <h3>MOTIVATION</h3>
+        <p>Building reputable websites for you</p>
+    </div>
+</div>
+<div class="trap">
+    <div class="web values">
+        <h3>Values</h3>
+        <ul>
+            <li>Dedication</li>
+            <li>Passion for coding</li>
+            <li>Flexibility towards clients' needs</li>
+        </ul>
+    </div>
+    <div class="web">
+     <h3>MISSION</h3>
+        <p>Crafting one of the best websites ever. </p>
+    </div>
+</div>
+<br><br><br>
+<hr>
+<hr>
+ <h2 class="quali">Subscribe to my website today</h2>
+<div>
+    <form action="">
+       <input class="first" type="text"  placeholder="First Name" autofocus autocomplete="Kelvin">
+    <input class="first" type="text" placeholder="Last Name" required autocomplete="Kemboi"><br><br>
+    <input class="ema" type="email" placeholder="Email" required autocomplete="kelvinkemboi@gmail.com"><br><br>
+    <input class="ema" type="password" placeholder="Password" required autocomplete="123456"><br><br>
+    <input class="ema" type="password" placeholder="Confirm password" required><br><br>
+    <p class="log"><input  type="checkbox" required>  I accept the Terms of Use & Privacy Policy</p>
+        <input class="sub" type="submit" value="Sign up"><br>
+    </form>
+</div>
+</body>
+</html>

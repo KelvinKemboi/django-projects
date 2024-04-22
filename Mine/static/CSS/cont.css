@@ -1,0 +1,135 @@
+.lat{
+   background-color: #100e0e;
+    border: 1px transparent;
+    height: 200px;
+    border-radius: 0 20px 0 20px;
+    filter: saturate(300%);
+}
+
+p.logo{
+   text-align: center;
+    font-size: 2em;
+    text-shadow: gold;
+    color: white;
+    font-weight: bolder;
+}
+p.logo:first-letter{
+    font-size: 3em;
+}
+p.links{
+    text-align: center;
+    margin-right: 300px;
+    word-break: break-all;
+    word-spacing: 100px;
+    float: right;
+}
+.up{
+    border-right: white 2px solid;
+    padding-right: 10px;
+}
+.up a{
+    text-decoration: none;
+    color: white;
+}
+.up a:hover{
+    transform: scale(1.2);
+    color: white;
+    background-color: green;
+    border: white 1px solid;
+    border-radius: 5px;
+    transition: all 1s;
+}
+.quali{
+    text-align: center;
+    font-size: 2em;
+}
+.contact{
+    display: flex;
+}
+p.arrow{
+    color: black;
+    font-weight: bolder;
+    font-size: 1.5em;
+    padding-left: 20px;
+}
+div.email{
+margin-left: 20px;
+    background-color: grey;
+   filter: brightness(120%);
+    border: #100e0e 1px solid;
+    border-radius: 10px 0 10px 0;
+    width: 300px;
+}
+div.whatsapp{
+     background-color: grey;
+    filter: brightness(120%);
+     margin-left: 150px;
+    width: 300px;
+    border: #100e0e 1px solid;
+    border-radius: 10px 0 10px 0;
+}
+div.ig{
+    margin-left: 140px;
+     background-color: grey;
+    filter: brightness(120%);
+    border: #100e0e 1px solid;
+    border-radius: 10px 0 10px 0;
+    width: 300px;
+}
+div.ig a{
+    padding-left: 30px;
+     text-decoration: none;
+    padding-top: 10px;
+}
+.ig a:hover{
+    color: white;
+    transform:translateY(30%);
+
+}
+div.whatsapp a{
+     padding-left: 30px;
+     text-decoration: none;
+    padding-top: 10px;
+}
+.whatsapp a:hover{
+     color: white;
+    transform:translateY(30%)
+}
+div.email a{
+     padding-left: 30px;
+     text-decoration: none;
+    padding-top: 30px;
+}
+.email a:hover{
+     color: white;
+    transform:translateY(30%)
+}
+iframe.map{
+    margin-left: 100px;
+    border-radius: 30px;
+    filter: grayscale(120%);
+}
+textarea.feed{
+    width: 1000px;
+    height: 100px;
+    border-radius: 30px;
+    margin-left: 100px;
+    padding: 20px;
+}
+.feed::placeholder{
+    color: grey;
+    font-weight: bold;
+    font-size: large;
+    text-align: center;
+}
+h3{
+    text-align: center;
+}
+.back{
+    background-color: #100e0e;
+    color: white;
+    border-radius: 0 20px 0 20px;
+}
+input{
+    margin-left: 600px;
+}

@@ -1,0 +1,124 @@
+.lat{
+   background-color: #100e0e;
+    border: 1px transparent;
+    height: 200px;
+    border-radius: 0 20px 0 20px;
+    filter: saturate(300%);
+}
+
+p.logo{
+   text-align: center;
+    font-size: 2em;
+    text-shadow: gold;
+    color: white;
+    font-weight: bolder;
+}
+p.logo:first-letter{
+    font-size: 3em;
+}
+p.links{
+    text-align: center;
+    margin-right: 300px;
+    word-break: break-all;
+    word-spacing: 100px;
+    float: right;
+}
+.up{
+    border-right: white 2px solid;
+    padding-right: 10px;
+}
+.up a{
+    text-decoration: none;
+    color: white;
+}
+.up a:hover{
+    transform: scale(1.2);
+    color: white;
+    background-color: green;
+    border: white 1px solid;
+    border-radius: 5px;
+    transition: all 1s;
+}
+.quali{
+    text-align: center;
+    font-size: 2em;
+}
+       table{border: transparent 1px solid;
+border-bottom: green 2px solid;
+    border-spacing: 10px;
+    width: 700px;
+    height: 200px;
+    border-collapse: collapse;
+    margin-left: 200px;
+            text-align: center;
+
+}
+.sal{color: green;
+font-weight: bolder;
+background-color: #f6f5f5;
+    font-size: large;
+}
+.head {color: white;
+    font-weight: bolder;
+    background-color: green;
+    background-size: 30px;
+    padding-left: 10px;
+}
+.bo{border-top-left-radius: 10px;}
+.no{border-top-right-radius: 10px; }
+h3{
+    text-align: center;
+    font-weight: bolder;
+    font-size: 3em;
+}
+    .first{border:grey 1px solid;
+        border-radius: 5px;
+        height: 25px;}
+        input::placeholder{padding: 10px;
+        }
+        h2{padding-left: 130px;
+        color: white;}
+        .ema{width: 337px;
+        border:grey 1px solid;
+            height: 25px;
+        border-radius: 5px;}
+        .beat{border: transparent 1px solid;
+            width: 350px;
+            border-radius: 20px;
+        padding: 30px;
+            box-shadow: 0 0 40px 20px rgb(85, 84, 117);
+            margin-left: 400px;
+            margin-top: 80px;
+        background-color: #453985;
+            filter: sepia(50%);
+        }
+    .log{padding-left: 30px;
+    color: white;
+    font-size: smaller;}
+    .now{color: white;
+        padding-left: 40px;
+    }
+    .mel{color: white;
+    padding-left: 65px;
+        font-size: smaller;
+    }
+    a{color: white;
+    }
+    a:hover{color: black;
+    }
+    body{
+        background-color: lavender;
+    }
+    div.morf:hover{
+       transform: translateY(-20px);
+            transition: all 2s;
+    }
+fieldset.set{
+    border-radius: 0 30px 0 30px;
+}
+footer.entry{
+    background-color: black;
+    color: white;
+    border-radius: 0 20px 0 20px;
+    text-align: center;
+}
