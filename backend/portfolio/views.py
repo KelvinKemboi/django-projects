@@ -15,7 +15,10 @@ def api_root(request, format=None):
         'habits': reverse('habits-list', request=request, format=format)
     })
 
-class habitList(generics.ListCreateAPIView):
+class HabitList(generics.ListCreateAPIView):
     queryset=habit.objects.all()
     serializer_class=HabitSerializer
 
+class HabitDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset=habit.objects.all()
+    serializer_class=HabitSerializer
