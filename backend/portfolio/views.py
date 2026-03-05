@@ -1,9 +1,21 @@
-from django.shortcuts import render
-from django.template import loader
+from django.shortcuts import render # html tester
+from rest_framework import generics 
+from .serializers import HabitSerializer # serialiser
+from rest_framework.decorators import api_view # for GET/ POST/ PUT/ DELETE functionalities
+from rest_framework.reverse import reverse
+from rest_framework.response import Response
+
+from .models import habit
 
 # Create your views here.
-from django.http import HttpResponse
 
-def home(request):
-    home_page=loader.get_template("home.html")
-    return HttpResponse(home_page.render())
+@api_view(['GET'])
+def api_root(request, format=None):
+    return Response({
+        'habits': reverse('habits-list', request=request, format=format)
+    })
+
+class habitList(generics.ListCreateAPIView):
+    queryset=habit.objects.all()
+    serializer_class=HabitSerializer
+
