@@ -5,7 +5,7 @@ from rest_framework.decorators import api_view # for GET/ POST/ PUT/ DELETE func
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 
-from .models import habit
+from .models import Habit
 
 # Create your views here.
 
@@ -16,9 +16,9 @@ def api_root(request, format=None):
     })
 
 class HabitList(generics.ListCreateAPIView):
-    queryset=habit.objects.all()
+    queryset=Habit.objects.all()
     serializer_class=HabitSerializer
 
 class HabitDetail(generics.RetrieveUpdateDestroyAPIView):
-    queryset=habit.objects.all()
+    queryset=Habit.objects.all()
     serializer_class=HabitSerializer
