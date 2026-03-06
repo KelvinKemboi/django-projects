@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
@@ -34,13 +35,28 @@ class Habit(models.Model):
 class HabitLog(models.Model):
     # individual habit logs
     habit=models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="logs") # CONNECT THIS TO PREVIOUS HABIT MODEL
-    completion_rate=models.IntegerField(default=0)
-    last_active=models.DateTimeField(auto_now_add=True)
+    completed=models.BooleanField(default=False)
     completed_at=models.DateField(null=True, blank=True)
     notes=models.TextField(max_length=100, default="")
 
     def __str__(self):
         return f"{self.habit}, Completion Rate: {self.completion_rate}"
+    
+class HabitReminder(models.Model):
+    # for habit remainders
+    habit= models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="reminders") # ONE HABIT- multiple remainders
+    reminder_time=models.TimeField(null=True)
+    active=models.BooleanField(default=True)
 
-    
-    
+class HabitGoal(models.Model):
+    # for habit goals
+    habit= models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="goals") # ONE HABIT- SAME ID, MULTIPLE GOALS
+    weekly_target= models.IntegerField(default=0)
+
+class HabitAnalyse(models.Model):
+    # completion rate/ last active for habits
+    habit= models.OneToOneField(Habit, on_delete=models.CASCADE, related_name="analysis") # ONE HABIT-OWN ANALYSIS
+    completion_rate= models.FloatField(default=0.00)
+    last_active= models.DateField(null=True)
+
+
