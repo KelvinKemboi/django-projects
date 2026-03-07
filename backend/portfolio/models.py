@@ -3,6 +3,11 @@ from django.contrib.auth.models import AbstractUser
 
 # Create your models here.
 
+##USER CLASS
+class User(AbstractUser):
+    user_name=models.CharField(max_length=100, default='')
+    email=models.EmailField(unique=True)
+
 # HABITS MODEL
 class Habit(models.Model):
     # list of categories of habits
@@ -21,6 +26,7 @@ class Habit(models.Model):
         ('inactive', 'Inactive')
     ]
     # habit columns for my db
+    user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="user-habits")
     name=models.CharField(max_length=100, blank=True, default='')
     category=models.CharField(max_length=100, choices=categories, default='other')
     streak=models.IntegerField(default=0)
@@ -34,6 +40,7 @@ class Habit(models.Model):
 
 class HabitLog(models.Model):
     # individual habit logs
+    user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="user-logs")
     habit=models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="logs") # CONNECT THIS TO PREVIOUS HABIT MODEL
     completed=models.BooleanField(default=False)
     completed_at=models.DateField(null=True, blank=True)
@@ -44,19 +51,23 @@ class HabitLog(models.Model):
     
 class HabitReminder(models.Model):
     # for habit remainders
+    user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="user-reminders")
     habit= models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="reminders") # ONE HABIT- multiple remainders
     reminder_time=models.TimeField(null=True)
     active=models.BooleanField(default=True)
 
 class HabitGoal(models.Model):
     # for habit goals
+    user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="user-goals")
     habit= models.ForeignKey(Habit, on_delete=models.CASCADE, related_name="goals") # ONE HABIT- SAME ID, MULTIPLE GOALS
     weekly_target= models.IntegerField(default=0)
 
 class HabitAnalyse(models.Model):
     # completion rate/ last active for habits
+    user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="user-analysis")
     habit= models.OneToOneField(Habit, on_delete=models.CASCADE, related_name="analysis") # ONE HABIT-OWN ANALYSIS
     completion_rate= models.FloatField(default=0.00)
     last_active= models.DateField(null=True)
+
 
 
