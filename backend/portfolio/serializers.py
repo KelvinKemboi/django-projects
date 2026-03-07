@@ -1,40 +1,64 @@
 from rest_framework import serializers
+from django.contrib.auth.hashers import make_password # hashes the password for security
 
-from .models import Habit, HabitLog, HabitReminder, HabitGoal, HabitAnalyse
+from .models import Habit, HabitLog, HabitReminder, HabitGoal, HabitAnalyse, User
 
+#have logs converted to json format
 class HabitLogSerializer(serializers.ModelSerializer):
     habit= serializers.HyperlinkedRelatedField(view_name='habits-detail',
                                                queryset= Habit.objects.all()
                                                )
     class Meta:
         model= HabitLog
-        fields= ["id",'habit',"completed", "completed_at", "notes"]
+        fields= ["id", "user", 'habit',"completed", "completed_at", "notes"]
 
-
+#have reminders converted to json format
 class HabitReminderSerializer(serializers.ModelSerializer):
     habit= serializers.HyperlinkedRelatedField(view_name='habits-detail',
                                                queryset= Habit.objects.all()
                                                )
     class Meta:
         model= HabitReminder
-        fields= ["id","habit","reminder_time", "active"]
+        fields= ["id", "user","habit","reminder_time", "active"]
 
+#have goals converted to json format
 class HabitGoalsSerializer(serializers.ModelSerializer):
     habit= serializers.HyperlinkedRelatedField(view_name='habits-detail',
                                                queryset= Habit.objects.all()
                                                )
     class Meta:
         model= HabitGoal
-        fields= ["id","habit","weekly_target"]
+        fields= ["id","user","habit","weekly_target"]
 
-
+#have analysis converted to json format
 class HabitAnalysisSerializer(serializers.ModelSerializer):
     habit= serializers.HyperlinkedRelatedField(view_name='habits-detail',
                                                queryset= Habit.objects.all()
                                                )
     class Meta:
         model= HabitAnalyse
-        fields= ["id","habit","completion_rate", "last_active"]
+        fields= ["id","user","habit","completion_rate", "last_active"]
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model= User
+        fields= ["id", "username", "email" ,"password"]
+
+    #hashing
+    def validate_password(self, value):
+        return make_password(value)
+
+
+class RegisterSerializer(serializers.ModelSerializer):
+    password= serializers.CharField(write_only-True)
+
+    class Meta:
+        model= User
+        fields= ["id", "username", "email" ,"password"]
+
+    #creating the user
+    def create(self, data):
+        return User.objects.create_user(**data)
 
 # convert data to JSON
 class HabitSerializer(serializers.HyperlinkedModelSerializer):
@@ -44,6 +68,6 @@ class HabitSerializer(serializers.HyperlinkedModelSerializer):
     analysis= HabitAnalysisSerializer(read_only=True)
     class Meta:
         model = Habit
-        fields = ['url', 'id', 'name', 'category', 'streak', 'created_at', 'description', 'logs', 'analysis']
+        fields = ['url', 'id', "user",'name', 'category', 'streak', 'created_at', 'description', 'logs', 'analysis']
 
     

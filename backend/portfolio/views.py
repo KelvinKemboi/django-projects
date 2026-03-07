@@ -4,8 +4,8 @@ from rest_framework.decorators import api_view # for GET/ POST/ PUT/ DELETE func
 from rest_framework.reverse import reverse
 from rest_framework.response import Response
 
-from .models import Habit, HabitGoal, HabitReminder
-from .serializers import HabitSerializer, HabitGoalsSerializer, HabitReminderSerializer
+from .models import Habit, HabitGoal, HabitReminder, User
+from .serializers import HabitSerializer, HabitGoalsSerializer, HabitReminderSerializer, UserSerializer, RegisterSerializer
 
 # Create your views here.
 
@@ -15,29 +15,145 @@ def api_root(request, format=None):
         'habits': reverse('habits-list', request=request, format=format)
     })
 
+
 # habits list & details
 class HabitList(generics.ListCreateAPIView):
     queryset=Habit.objects.all()
     serializer_class=HabitSerializer
 
+    def get_queryset(self):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+            return Habit.objects.filter(user=user)
+        return super().get_queryset()
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
 class HabitDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=Habit.objects.all()
     serializer_class=HabitSerializer
+
+    def get_queryset(self):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+            return Habit.objects.filter(user=user)
+        return super().get_queryset()
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
 
 # goals list and details
 class GoalsList(generics.ListCreateAPIView):
     queryset=HabitGoal.objects.all()
     serializer_class=HabitGoalsSerializer
 
+
+    def get_queryset(self):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+            return HabitGoal.objects.filter(user=user)
+        return super().get_queryset()
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
 class GoalsDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=HabitGoal.objects.all()
     serializer_class=HabitGoalsSerializer
 
+    def get_queryset(self):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+            return HabitGoal.objects.filter(user=user)
+        return super().get_queryset()
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
 # Remainders list and details
-class RemaindersList(generics.ListCreateAPIView):
+class RemindersList(generics.ListCreateAPIView):
     queryset=HabitReminder.objects.all()
     serializer_class=HabitReminderSerializer
 
-class ReamindersDetail(generics.RetrieveUpdateDestroyAPIView):
+    def get_queryset(self):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+            return HabitReminder.objects.filter(user=user)
+        return super().get_queryset()
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+
+class RemindersDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=HabitReminder.objects.all()
     serializer_class=HabitReminderSerializer
+
+    def get_queryset(self):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+            return HabitReminder.objects.filter(user=user)
+        return super().get_queryset()
+    
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+ 
+# User list and details
+class UserList(generics.ListCreateAPIView):
+    queryset=User.objects.all()
+    serializer_class=UserSerializer
+
+    def get_queryset(self):
+        user= self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_superuser and not user.is_staff:
+            return User.objects.all(id=user.id)
+        user.objects.all()
+
+class UserDetail(generics.RetrieveAPIView):
+    queryset=User.objects.all()
+    serializer_class=UserSerializer
+
+    def get_object(self):
+        user= self.request.user
+
+        if not user.is_authenticated:
+            return Habit.objects.none()
+        if not user.is_staff and not user.is_superuser:
+            pass
+        return super().get_object()
+
+
+# Register
+class Register(generics.CreateAPIView):
+    queryset=User.objects.all()
+    serializer_class=RegisterSerializer
+
+
+
