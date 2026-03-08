@@ -1,9 +1,12 @@
 from django.shortcuts import render # html tester
-from rest_framework import generics 
+from rest_framework import generics # # for GET/ POST/ PUT/ DELETE functionalities
 from rest_framework.decorators import api_view # for GET/ POST/ PUT/ DELETE functionalities
 from rest_framework.reverse import reverse
-from rest_framework.response import Response
-
+from rest_framework.response import Response # JSON responses
+from rest_framework.permissions import IsAuthenticated # only logged in users can view their own habits
+from rest_framework.views import APIView # view the login endpoint
+from django.contrib.auth import authenticate # authenticate user
+from rest_framework.exceptions import AuthenticationFailed # handling failed authentications
 from .models import Habit, HabitGoal, HabitReminder, User
 from .serializers import HabitSerializer, HabitGoalsSerializer, HabitReminderSerializer, UserSerializer, RegisterSerializer
 
@@ -20,12 +23,10 @@ def api_root(request, format=None):
 class HabitList(generics.ListCreateAPIView):
     queryset=Habit.objects.all()
     serializer_class=HabitSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user=self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return Habit.objects.filter(user=user)
         return super().get_queryset()
@@ -37,12 +38,10 @@ class HabitList(generics.ListCreateAPIView):
 class HabitDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=Habit.objects.all()
     serializer_class=HabitSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user=self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return Habit.objects.filter(user=user)
         return super().get_queryset()
@@ -55,13 +54,10 @@ class HabitDetail(generics.RetrieveUpdateDestroyAPIView):
 class GoalsList(generics.ListCreateAPIView):
     queryset=HabitGoal.objects.all()
     serializer_class=HabitGoalsSerializer
-
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user=self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return HabitGoal.objects.filter(user=user)
         return super().get_queryset()
@@ -73,12 +69,10 @@ class GoalsList(generics.ListCreateAPIView):
 class GoalsDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=HabitGoal.objects.all()
     serializer_class=HabitGoalsSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user=self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return HabitGoal.objects.filter(user=user)
         return super().get_queryset()
@@ -91,12 +85,10 @@ class GoalsDetail(generics.RetrieveUpdateDestroyAPIView):
 class RemindersList(generics.ListCreateAPIView):
     queryset=HabitReminder.objects.all()
     serializer_class=HabitReminderSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user=self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return HabitReminder.objects.filter(user=user)
         return super().get_queryset()
@@ -108,12 +100,10 @@ class RemindersList(generics.ListCreateAPIView):
 class RemindersDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=HabitReminder.objects.all()
     serializer_class=HabitReminderSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user=self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return HabitReminder.objects.filter(user=user)
         return super().get_queryset()
@@ -126,25 +116,21 @@ class RemindersDetail(generics.RetrieveUpdateDestroyAPIView):
 class UserList(generics.ListCreateAPIView):
     queryset=User.objects.all()
     serializer_class=UserSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_queryset(self):
         user= self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_superuser and not user.is_staff:
             return User.objects.all(id=user.id)
-        user.objects.all()
+        return User.objects.all()
 
 class UserDetail(generics.RetrieveAPIView):
     queryset=User.objects.all()
     serializer_class=UserSerializer
+    permission_classes=[IsAuthenticated]
 
     def get_object(self):
         user= self.request.user
-
-        if not user.is_authenticated:
-            return Habit.objects.none()
         if not user.is_staff and not user.is_superuser:
             pass
         return super().get_object()
