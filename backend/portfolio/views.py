@@ -10,7 +10,7 @@ from rest_framework.exceptions import AuthenticationFailed # handling failed aut
 from .models import Habit, HabitGoal, HabitReminder, User
 from .serializers import HabitSerializer, HabitGoalsSerializer, HabitReminderSerializer, UserSerializer, RegisterSerializer
 
-# Create your views here.
+# views
 
 @api_view(['GET'])
 def api_root(request, format=None):
