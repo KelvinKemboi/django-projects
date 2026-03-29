@@ -1,4 +1,5 @@
 ﻿import React, { useMemo, useState } from "react"
+import HabitForm from "../components/HabitForm"
 import HabitsCard from "../components/HabitsCard"
 
 // Seed data so the page can render before backend API integration.
@@ -38,12 +39,21 @@ const initialHabits = [
 ]
 
 function HabitsPage() {
-  // Main page states- habits, filters, freq
+  // Main page state: habits list, active filters, and form state.
   const [habits, setHabits] = useState(initialHabits)
   const [statusFilter, setStatusFilter] = useState("All habits")
   const [frequencyFilter, setFrequencyFilter] = useState("All")
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState("add")
+  const [editingHabitId, setEditingHabitId] = useState(null)
 
-  // Chnage the visible list only when habits or filters change.
+  // Resolve the selected habit object when editing.
+  const editingHabit = useMemo(
+    () => habits.find((habit) => habit.id === editingHabitId) ?? null,
+    [habits, editingHabitId],
+  )
+
+  // Recompute the visible list only when habits or filters change.
   const filteredHabits = useMemo(() => {
     return habits.filter((habit) => {
       const statusMatches =
@@ -58,7 +68,7 @@ function HabitsPage() {
     })
   }, [habits, statusFilter, frequencyFilter])
 
-  // Toggle today's completion and adjust progress for visual feedback.
+  // Toggle today's completion and adjust progress for quick visual feedback.
   const handleToggleComplete = (id) => {
     setHabits((prev) =>
       prev.map((habit) =>
@@ -75,22 +85,92 @@ function HabitsPage() {
     )
   }
 
-  //edit action button to edit habits
-  const handleEdit = (id) => {
-    console.log(`Edit habit ${id}`)
+  // Open form for creating a new habit.
+  const handleAddClick = () => {
+    setFormMode("add")
+    setEditingHabitId(null)
+    setIsFormOpen(true)
   }
 
-  // Remove a habit card from local state.
+  // Open form for editing a selected habit
+  const handleEdit = (id) => {
+    setFormMode("edit")
+    setEditingHabitId(id)
+    setIsFormOpen(true)
+  }
+
+  // Remove/delete a habit card from local state.
   const handleDelete = (id) => {
     setHabits((prev) => prev.filter((habit) => habit.id !== id))
   }
 
+  // Persist add/edit form results into habits state.
+  const handleSubmitForm = (values) => {
+    if (formMode === "edit" && editingHabitId !== null) {
+      setHabits((prev) =>
+        prev.map((habit) =>
+          habit.id === editingHabitId
+            ? {
+                ...habit,
+                ...values,
+              }
+            : habit,
+        ),
+      )
+    } else {
+      setHabits((prev) => {
+        const nextId = prev.length > 0 ? Math.max(...prev.map((habit) => habit.id)) + 1 : 1
+
+        return [
+          ...prev,
+          {
+            id: nextId,
+            ...values,
+          },
+        ]
+      })
+    }
+
+    setIsFormOpen(false)
+    setEditingHabitId(null)
+    setFormMode("add")
+  }
+
+  const handleCancelForm = () => {
+    setIsFormOpen(false)
+    setEditingHabitId(null)
+    setFormMode("add")
+  }
+
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6">
-      <header className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Habits</h1>
-        <p className="mt-1 text-sm text-gray-600">Manage all your habits</p>
+      <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Habits</h1>
+          <p className="mt-1 text-sm text-gray-600">Manage all your habits</p>
+        </div>
+
+        {/* Add option for creating a new habit. */}
+        <button
+          type="button"
+          onClick={handleAddClick}
+          className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700"
+        >
+          Add Habit
+        </button>
       </header>
+
+      {isFormOpen && (
+        <section className="mb-6">
+          <HabitForm
+            key={`${formMode}-${editingHabitId ?? "new"}`}
+            mode={formMode}
+            initialValues={formMode === "edit" ? editingHabit : null}
+            onSubmit={handleSubmitForm}
+            onCancel={handleCancelForm}
+          />
+        </section>
+      )}
 
       <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
