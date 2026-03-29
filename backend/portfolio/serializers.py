@@ -1,4 +1,4 @@
-from rest_framework import serializers
+﻿from rest_framework import serializers
 from django.contrib.auth.hashers import make_password # hashes the password for security
 
 from .models import Habit, HabitLog, HabitReminder, HabitGoal, HabitAnalyse, User
@@ -66,8 +66,29 @@ class HabitSerializer(serializers.HyperlinkedModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='habits-detail') #generates link for each habit
     logs= HabitLogSerializer(many=True, read_only=True)
     analysis= HabitAnalysisSerializer(read_only=True)
+
+    # Frontend-friendly aliases.
+    completedToday = serializers.BooleanField(source="completed_today")
+    progressPercent = serializers.IntegerField(source="progress_percent")
+
     class Meta:
         model = Habit
-        fields = ['url', 'id', "user",'name', 'category', 'streak', 'created_at', 'description', 'logs', 'analysis']
+        fields = [
+            'url',
+            'id',
+            'user',
+            'name',
+            'category',
+            'frequency',
+            'streak',
+            'completedToday',
+            'progressPercent',
+            'created_at',
+            'description',
+            'logs',
+            'analysis',
+        ]
+        read_only_fields = ['user', 'created_at', 'logs', 'analysis']
 
-    
+    def validate_progressPercent(self, value):
+        return max(0, min(100, value))

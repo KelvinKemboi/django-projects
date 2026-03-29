@@ -1,4 +1,4 @@
-from django.db import models
+﻿from django.db import models
 from django.contrib.auth import get_user_model
 
 #user model
@@ -21,11 +21,20 @@ class Habit(models.Model):
         ('active', 'Active'),
         ('inactive', 'Inactive')
     ]
+
+    frequency_choices = [
+        ('Daily', 'Daily'),
+        ('Weekly', 'Weekly'),
+    ]
+
     # habit columns for my db
     user=models.ForeignKey(User, on_delete=models.CASCADE, related_name="user_habits", null=True, blank=True)
     name=models.CharField(max_length=100, blank=True, default='')
     category=models.CharField(max_length=100, choices=categories, default='other')
     streak=models.IntegerField(default=0)
+    frequency=models.CharField(max_length=20, choices=frequency_choices, default='Daily')
+    completed_today=models.BooleanField(default=False)
+    progress_percent=models.PositiveIntegerField(default=0)
     created_at=models.DateTimeField(auto_now_add=True)
     description=models.TextField(max_length=100, default='')
     isActive=models.CharField(max_length=100,choices=activity, default='inactive')
@@ -64,4 +73,3 @@ class HabitAnalyse(models.Model):
     habit= models.OneToOneField(Habit, on_delete=models.CASCADE, related_name="analysis") # ONE HABIT-OWN ANALYSIS
     completion_rate= models.FloatField(default=0.00)
     last_active= models.DateField(null=True)
-

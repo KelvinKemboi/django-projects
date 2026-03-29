@@ -1,6 +1,7 @@
 ﻿import React, { useState } from "react"
 
 function HabitForm({ mode, initialValues, onSubmit, onCancel }) {
+  // Initialize form state from edit values or use defaults for add mode.
   const [formData, setFormData] = useState(() => ({
     name: initialValues?.name ?? "",
     frequency: initialValues?.frequency ?? "Daily",
@@ -9,6 +10,7 @@ function HabitForm({ mode, initialValues, onSubmit, onCancel }) {
     completedToday: initialValues?.completedToday ?? false,
   }))
 
+  // hange handler for all form field types.
   const handleChange = (event) => {
     const { name, value, type, checked } = event.target
 
@@ -18,6 +20,7 @@ function HabitForm({ mode, initialValues, onSubmit, onCancel }) {
     }))
   }
 
+  // handles values before submit
   const handleSubmit = (event) => {
     event.preventDefault()
 
@@ -33,6 +36,7 @@ function HabitForm({ mode, initialValues, onSubmit, onCancel }) {
       return
     }
 
+    // Payload for add/edit behavior
     onSubmit(payload)
   }
 
@@ -42,6 +46,7 @@ function HabitForm({ mode, initialValues, onSubmit, onCancel }) {
         {mode === "edit" ? "Edit Habit" : "Add Habit"}
       </h2>
 
+      {/* inputs for habit details. */}
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
         <label className="flex flex-col gap-1 text-sm text-gray-700 sm:col-span-2">
           Habit name
@@ -106,6 +111,7 @@ function HabitForm({ mode, initialValues, onSubmit, onCancel }) {
         </label>
       </div>
 
+      {/* Submit saves changes; cancel closes form without saving. */}
       <div className="mt-4 flex items-center gap-2">
         <button type="submit" className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
           {mode === "edit" ? "Save changes" : "Add habit"}

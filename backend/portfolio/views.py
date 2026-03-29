@@ -1,9 +1,9 @@
-from django.shortcuts import render # html tester
+﻿from django.shortcuts import render # html tester
 from rest_framework import generics # # for GET/ POST/ PUT/ DELETE functionalities
 from rest_framework.decorators import api_view # for GET/ POST/ PUT/ DELETE functionalities
 from rest_framework.reverse import reverse
 from rest_framework.response import Response # JSON responses
-from rest_framework.permissions import IsAuthenticated # only logged in users can view their own habits
+from rest_framework.permissions import IsAuthenticated, AllowAny # auth permissions
 from rest_framework.views import APIView # view the login endpoint
 from django.contrib.auth import authenticate # authenticate user
 from rest_framework.exceptions import AuthenticationFailed # handling failed authentications
@@ -22,31 +22,37 @@ def api_root(request, format=None):
 class HabitList(generics.ListCreateAPIView):
     queryset=Habit.objects.all()
     serializer_class=HabitSerializer
-    permission_classes=[IsAuthenticated]
+    permission_classes=[AllowAny]
 
     def get_queryset(self):
         user=self.request.user
-        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+        if user.is_authenticated and not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return Habit.objects.filter(user=user)
         return super().get_queryset()
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        if self.request.user.is_authenticated:
+            serializer.save(user=self.request.user)
+            return
+        serializer.save()
 
 
 class HabitDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset=Habit.objects.all()
     serializer_class=HabitSerializer
-    permission_classes=[IsAuthenticated]
+    permission_classes=[AllowAny]
 
     def get_queryset(self):
         user=self.request.user
-        if not user.is_superuser and not user.is_staff: # normal users only see their own habits
+        if user.is_authenticated and not user.is_superuser and not user.is_staff: # normal users only see their own habits
             return Habit.objects.filter(user=user)
         return super().get_queryset()
     
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
+        if self.request.user.is_authenticated:
+            serializer.save(user=self.request.user)
+            return
+        serializer.save()
 
 
 # goals list and details
@@ -139,6 +145,5 @@ class UserDetail(generics.RetrieveAPIView):
 class Register(generics.CreateAPIView):
     queryset=User.objects.all()
     serializer_class=RegisterSerializer
-
 
 

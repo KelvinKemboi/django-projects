@@ -1,51 +1,48 @@
-﻿import React, { useMemo, useState } from "react"
+﻿import React, { useEffect, useMemo, useState } from "react"
 import HabitForm from "../components/HabitForm"
 import HabitsCard from "../components/HabitsCard"
 
-// Seed data so the page can render before backend API integration.
-const initialHabits = [
-  {
-    id: 1,
-    name: "Drink Water",
-    streak: 7,
-    completedToday: true,
-    progressPercent: 70,
-    frequency: "Daily",
-  },
-  {
-    id: 2,
-    name: "Morning Walk",
-    streak: 4,
-    completedToday: false,
-    progressPercent: 40,
-    frequency: "Daily",
-  },
-  {
-    id: 3,
-    name: "Read 20 Pages",
-    streak: 10,
-    completedToday: true,
-    progressPercent: 85,
-    frequency: "Weekly",
-  },
-  {
-    id: 4,
-    name: "Plan Week",
-    streak: 2,
-    completedToday: false,
-    progressPercent: 25,
-    frequency: "Weekly",
-  },
-]
+const HABITS_API_BASE = "/api/habits/"
+
+const getApiErrorMessage = async (response, fallbackMessage) => {
+  try {
+    const data = await response.json()
+
+    if (typeof data === "string") {
+      return data
+    }
+
+    if (data?.detail) {
+      return data.detail
+    }
+
+    const firstKey = Object.keys(data || {})[0]
+    if (firstKey) {
+      const firstValue = data[firstKey]
+      if (Array.isArray(firstValue) && firstValue.length > 0) {
+        return `${firstKey}: ${firstValue[0]}`
+      }
+      if (typeof firstValue === "string") {
+        return `${firstKey}: ${firstValue}`
+      }
+    }
+  } catch {
+    // Fall back to default text when response is not JSON.
+  }
+
+  return fallbackMessage
+}
 
 function HabitsPage() {
-  // Main page state: habits list, active filters, and form state.
-  const [habits, setHabits] = useState(initialHabits)
+  // Main page state: API habits list, active filters, and form state.
+  const [habits, setHabits] = useState([])
   const [statusFilter, setStatusFilter] = useState("All habits")
   const [frequencyFilter, setFrequencyFilter] = useState("All")
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [formMode, setFormMode] = useState("add")
   const [editingHabitId, setEditingHabitId] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [apiError, setApiError] = useState("")
 
   // Resolve the selected habit object when editing.
   const editingHabit = useMemo(
@@ -68,21 +65,74 @@ function HabitsPage() {
     })
   }, [habits, statusFilter, frequencyFilter])
 
-  // Toggle today's completion and adjust progress for quick visual feedback.
-  const handleToggleComplete = (id) => {
-    setHabits((prev) =>
-      prev.map((habit) =>
-        habit.id === id
-          ? {
-              ...habit,
-              completedToday: !habit.completedToday,
-              progressPercent: habit.completedToday
-                ? Math.max(0, habit.progressPercent - 10)
-                : Math.min(100, habit.progressPercent + 10),
-            }
-          : habit,
-      ),
-    )
+  // Load habits from Django when the page mounts.
+  useEffect(() => {
+    const fetchHabits = async () => {
+      setIsLoading(true)
+      setApiError("")
+
+      try {
+        const response = await fetch(HABITS_API_BASE)
+        if (!response.ok) {
+          const message = await getApiErrorMessage(
+            response,
+            `Failed to load habits (${response.status})`,
+          )
+          throw new Error(message)
+        }
+
+        const data = await response.json()
+        setHabits(Array.isArray(data) ? data : [])
+      } catch (error) {
+        setApiError(error.message || "Failed to load habits")
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    fetchHabits()
+  }, [])
+
+  // Toggle today's completion and persist to backend.
+  const handleToggleComplete = async (id) => {
+    const targetHabit = habits.find((habit) => habit.id === id)
+    if (!targetHabit) {
+      return
+    }
+
+    const nextCompletedToday = !targetHabit.completedToday
+    const nextProgressPercent = nextCompletedToday
+      ? Math.min(100, Number(targetHabit.progressPercent || 0) + 10)
+      : Math.max(0, Number(targetHabit.progressPercent || 0) - 10)
+
+    const payload = {
+      completedToday: nextCompletedToday,
+      progressPercent: nextProgressPercent,
+    }
+
+    try {
+      const response = await fetch(`/api/habits/${id}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const message = await getApiErrorMessage(
+          response,
+          `Failed to update habit (${response.status})`,
+        )
+        throw new Error(message)
+      }
+
+      const updatedHabit = await response.json()
+      setHabits((prev) => prev.map((habit) => (habit.id === id ? updatedHabit : habit)))
+      setApiError("")
+    } catch (error) {
+      setApiError(error.message || "Failed to update habit")
+    }
   }
 
   // Open form for creating a new habit.
@@ -92,48 +142,83 @@ function HabitsPage() {
     setIsFormOpen(true)
   }
 
-  // Open form for editing a selected habit
+  // Open form for editing a selected habit.
   const handleEdit = (id) => {
     setFormMode("edit")
     setEditingHabitId(id)
     setIsFormOpen(true)
   }
 
-  // Remove/delete a habit card from local state.
-  const handleDelete = (id) => {
-    setHabits((prev) => prev.filter((habit) => habit.id !== id))
+  // Remove a habit card from backend and local state.
+  const handleDelete = async (id) => {
+    try {
+      const response = await fetch(`/api/habits/${id}`, {
+        method: "DELETE",
+      })
+
+      if (!response.ok) {
+        const message = await getApiErrorMessage(
+          response,
+          `Failed to delete habit (${response.status})`,
+        )
+        throw new Error(message)
+      }
+
+      setHabits((prev) => prev.filter((habit) => habit.id !== id))
+      setApiError("")
+    } catch (error) {
+      setApiError(error.message || "Failed to delete habit")
+    }
   }
 
-  // Persist add/edit form results into habits state.
-  const handleSubmitForm = (values) => {
-    if (formMode === "edit" && editingHabitId !== null) {
-      setHabits((prev) =>
-        prev.map((habit) =>
-          habit.id === editingHabitId
-            ? {
-                ...habit,
-                ...values,
-              }
-            : habit,
-        ),
-      )
-    } else {
-      setHabits((prev) => {
-        const nextId = prev.length > 0 ? Math.max(...prev.map((habit) => habit.id)) + 1 : 1
+  // Persist add/edit form results into backend and local state.
+  const handleSubmitForm = async (values) => {
+    const isEdit = formMode === "edit" && editingHabitId !== null
+    const endpoint = isEdit ? `/api/habits/${editingHabitId}` : HABITS_API_BASE
+    const method = isEdit ? "PATCH" : "POST"
 
-        return [
-          ...prev,
-          {
-            id: nextId,
-            ...values,
-          },
-        ]
-      })
+    const payload = {
+      ...values,
+      streak: Number(values.streak) || 0,
+      progressPercent: Math.max(0, Math.min(100, Number(values.progressPercent) || 0)),
+      completedToday: Boolean(values.completedToday),
+      frequency: values.frequency || "Daily",
     }
 
-    setIsFormOpen(false)
-    setEditingHabitId(null)
-    setFormMode("add")
+    try {
+      const response = await fetch(endpoint, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      })
+
+      if (!response.ok) {
+        const message = await getApiErrorMessage(
+          response,
+          `Failed to save habit (${response.status})`,
+        )
+        throw new Error(message)
+      }
+
+      const savedHabit = await response.json()
+
+      if (isEdit) {
+        setHabits((prev) =>
+          prev.map((habit) => (habit.id === editingHabitId ? savedHabit : habit)),
+        )
+      } else {
+        setHabits((prev) => [...prev, savedHabit])
+      }
+
+      setIsFormOpen(false)
+      setEditingHabitId(null)
+      setFormMode("add")
+      setApiError("")
+    } catch (error) {
+      setApiError(error.message || "Failed to save habit")
+    }
   }
 
   const handleCancelForm = () => {
@@ -159,6 +244,12 @@ function HabitsPage() {
           Add Habit
         </button>
       </header>
+
+      {apiError ? (
+        <p className="mb-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+          {apiError}
+        </p>
+      ) : null}
 
       {isFormOpen && (
         <section className="mb-6">
@@ -216,7 +307,11 @@ function HabitsPage() {
 
       {/* Card grid. Falls back to an empty-state message when nothing matches. */}
       <section className="grid gap-4 sm:grid-cols-2">
-        {filteredHabits.length > 0 ? (
+        {isLoading ? (
+          <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-600 sm:col-span-2">
+            Loading habits...
+          </p>
+        ) : filteredHabits.length > 0 ? (
           filteredHabits.map((habit) => (
             <HabitsCard
               key={habit.id}
