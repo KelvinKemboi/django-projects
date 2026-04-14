@@ -44,11 +44,50 @@ function GoalsPage() {
   const [apiError, setApiError] = useState("") //erro message
   const [successMessage, setSuccessMessage] = useState("") //success message
 
-  return (
+//load data from django habits when page mounts
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true) //loading data
+      setApiError("") //clear current api error
+
+      try {
+        const [habitsResponse, goalsResponse] = await Promise.all([
+          fetch(HABITS_API_BASE),
+          fetch(GOALS_API_BASE),
+        ]) //fetch and store habits & goals form api
+        
+        //error-habit fetch failed
+        if (!habitsResponse.ok) {
+          throw new Error(await getApiErrorMessage(habitsResponse, `Failed to load habits (${habitsResponse.status})`))
+        }
+        //error-goal fetch failed
+        if (!goalsResponse.ok) {
+          throw new Error(await getApiErrorMessage(goalsResponse, `Failed to load goals (${goalsResponse.status})`))
+        }
+        
+        //else store data in varaibles
+        const habitsData = await habitsResponse.json() 
+        const goalsData = await goalsResponse.json()
+        
+        //set current habit & goals list to fetched habits
+        setHabits(Array.isArray(habitsData) ? habitsData : [])
+        setGoals(Array.isArray(goalsData) ? goalsData : [])
+        setApiError("") //clear errors
+      } catch (error) {
+        setApiError(error.message || "Failed to load goal data") //error handling
+      } finally {
+        setIsLoading(false) //stop loading data
+      }
+    }
+
+    fetchData() //fetch data
+  }, [])
+  
+ return (
     <div>
         
     </div>
-  )
+ )
 }
 
 export default GoalsPage
