@@ -23,12 +23,16 @@ class HabitReminderSerializer(serializers.ModelSerializer):
 
 #have goals converted to json format
 class HabitGoalsSerializer(serializers.ModelSerializer):
-    habit= serializers.HyperlinkedRelatedField(view_name='habits-detail',
-                                               queryset= Habit.objects.all()
-                                               )
+    habit = serializers.PrimaryKeyRelatedField(queryset=Habit.objects.all())
+    habitName = serializers.CharField(source='habit.name', read_only=True)
+    habitFrequency = serializers.CharField(source='habit.frequency', read_only=True)
+    habitProgressPercent = serializers.IntegerField(source='habit.progress_percent', read_only=True)
+    habitStreak = serializers.IntegerField(source='habit.streak', read_only=True)
+    habitCompletedToday = serializers.BooleanField(source='habit.completed_today', read_only=True)
+
     class Meta:
-        model= HabitGoal
-        fields= ["id","user","habit","weekly_target"]
+        model = HabitGoal
+        fields = ["id", "user", "habit", "weekly_target", "habitName", "habitFrequency", "habitProgressPercent", "habitStreak", "habitCompletedToday"]
 
 #have analysis converted to json format
 class HabitAnalysisSerializer(serializers.ModelSerializer):
@@ -67,7 +71,7 @@ class HabitSerializer(serializers.HyperlinkedModelSerializer):
     logs= HabitLogSerializer(many=True, read_only=True)
     analysis= HabitAnalysisSerializer(read_only=True)
 
-    # Frontend-friendly aliases.
+    # Frontend aliases for progress
     completedToday = serializers.BooleanField(source="completed_today")
     progressPercent = serializers.IntegerField(source="progress_percent")
 
