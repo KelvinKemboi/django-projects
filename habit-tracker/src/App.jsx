@@ -1,6 +1,6 @@
 ﻿import React from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
-import Navbar from "./components/Navbar"
+import Navbar from "./components/Navbar.jsx"
 import HabitsPage from "./pages/HabitsPage"
 import GoalsPage from "./pages/GoalsPage"
 

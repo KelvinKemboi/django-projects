@@ -83,11 +83,73 @@ function GoalsPage() {
     fetchData() //fetch data
   }, [])
   
- return (
+ //perform changes in goals per habits
+  const goalsByHabitId = useMemo(() => {
+    //use maps to retrieve habit
+    return goals.reduce((map, goal) => {
+      map[goal.habit] = goal
+      return map
+    }, {})
+  }, [goals]) 
+
+  const availableHabits = useMemo(() => {
+    return habits.filter((habit) => !goalsByHabitId[habit.id]) //all habits excluding id habit
+  }, [habits, goalsByHabitId])
+
+  useEffect(() => {
+    if (!selectedHabitId && availableHabits.length > 0) {
+      setSelectedHabitId(availableHabits[0].id)
+    }
+  }, [availableHabits, selectedHabitId])
+
+  //adding goal
+  const handleAddGoal = async (event) => {
+    event.preventDefault()
+    if (!selectedHabitId) {
+      return
+    }
+
+    setIsSaving(true) //load saving state
+    setApiError("") //clear messages
+    setSuccessMessage("")
+
+    try {
+      //post new goal from fields
+      const response = await fetch(GOALS_API_BASE, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        }, 
+        body: JSON.stringify({
+          habit: selectedHabitId,
+          weekly_target: Number(weeklyTarget) || 0,
+        }),
+      })
+
+      //handling response error
+      if (!response.ok) {
+        throw new Error(await getApiErrorMessage(response, `Failed to add goal (${response.status})`))
+      }
+
+      const newGoal = await response.json() //save goal
+      //set goals, show message and clear errors
+      setGoals((prev) => [...prev, newGoal])
+      setSuccessMessage("Goal added successfully.")
+      setWeeklyTarget(1)
+      setApiError("")
+    } catch (error) {
+      setApiError(error.message || "Failed to add goal")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  return(
+
     <div>
-        
+
     </div>
- )
+  )
 }
 
 export default GoalsPage
