@@ -1,194 +1,143 @@
-﻿import React, { useEffect, useMemo, useState } from "react"
+import React, { useEffect, useMemo, useState } from "react"
 import HabitForm from "../components/HabitForm"
 import HabitsCard from "../components/HabitsCard"
+import { authFetch, getApiErrorMessage } from "../lib/api.js"
 
-// same url to be reused
 const HABITS_API_BASE = "/api/habits/"
 
-//converts api error messages into ones readable by users
-const getApiErrorMessage = async (response, fallbackMessage) => {
-  try {
-    const data = await response.json() //store json response in data
-
-    if (typeof data === "string") { // if normal string return that
-      return data
-    }
-
-    if (data?.detail) { //safely checks if data has a detail property
-      return data.detail
-    }
-
-    const firstKey = Object.keys(data || {})[0] //store first key of the data object. if null pick empty dict
-    if (firstKey) {
-      const firstValue = data[firstKey]
-      if (Array.isArray(firstValue) && firstValue.length > 0) { //if value is an array and has more than one item return first item idx 0
-        return `${firstKey}: ${firstValue[0]}`
-      }
-      if (typeof firstValue === "string") { //if plain string 
-        return `${firstKey}: ${firstValue}`
-      }
-    }
-  } catch {
-    // Fall back to default text when response is not JSON.
-  }
-
-  return fallbackMessage
-}
-
-//react component
 function HabitsPage() {
-  // Main page state: API habits list, active filters, and form state.
-  // formart=> current, updating variable= usestate(initial state)
   const [habits, setHabits] = useState([])
   const [statusFilter, setStatusFilter] = useState("All habits")
-  const [frequencyFilter, setFrequencyFilter] = useState("All") //default all
-  const [isFormOpen, setIsFormOpen] = useState(false) //for opening the form
-  const [formMode, setFormMode] = useState("add") // initial add mode for form(add/edit)
-  const [editingHabitId, setEditingHabitId] = useState(null) //null if no habit
-  const [isLoading, setIsLoading] = useState(true) //if data is still being fetched from backend
-  const [apiError, setApiError] = useState("") //no initial error
+  const [frequencyFilter, setFrequencyFilter] = useState("All")
+  const [isFormOpen, setIsFormOpen] = useState(false)
+  const [formMode, setFormMode] = useState("add")
+  const [editingHabitId, setEditingHabitId] = useState(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [apiError, setApiError] = useState("")
 
-  // useMemo- Resolve the selected habit object only when editing.
   const editingHabit = useMemo(
-    () => habits.find((habit) => habit.id === editingHabitId) ?? null, //calculate value- loops hough habits and finds the one matching editinghabitid
-    [habits, editingHabitId], //state dependencie that are being changed- calculations happen only when they change
+    () => habits.find((habit) => habit.id === editingHabitId) ?? null,
+    [habits, editingHabitId],
   )
 
-  // Recompute the visible list only when habits or filters change by creating a new array with habits matching the filters
+  // Apply both filter controls in one pass so the list always reflects the current UI state.
   const filteredHabits = useMemo(() => {
     return habits.filter((habit) => {
-      //status
       const statusMatches =
-        (statusFilter === "All habits") || //for all habits
-        (statusFilter === "Completed" && habit.completedToday) || //for completed today
-        (statusFilter === "Missed" && !habit.completedToday) //for missed
+        statusFilter === "All habits" ||
+        (statusFilter === "Completed" && habit.completedToday) ||
+        (statusFilter === "Missed" && !habit.completedToday)
 
-      //frequency
       const frequencyMatches =
-        (frequencyFilter === "All") ||
-        (habit.frequency === frequencyFilter)
+        frequencyFilter === "All" || habit.frequency === frequencyFilter
 
       return statusMatches && frequencyMatches
     })
-  }, [habits, statusFilter, frequencyFilter]) //state dependencies affected- calculations happen only when they change
+  }, [habits, statusFilter, frequencyFilter])
 
-  // Load habits from Django when the page mounts.
   useEffect(() => {
     const fetchHabits = async () => {
-      setIsLoading(true) //loading data from backend
-      setApiError("") //erase prev errors
+      setIsLoading(true)
+      setApiError("")
 
       try {
-        const response = await fetch(HABITS_API_BASE) //fetch from api
-        if (!response.ok) { //for errors
-          const message = await getApiErrorMessage(
-            response,
-            `Failed to load habits (${response.status})`, //fallback message
+        // Even though habits are readable without auth in the backend right now, using authFetch keeps ownership intact.
+        const response = await authFetch(HABITS_API_BASE)
+        if (!response.ok) {
+          throw new Error(
+            await getApiErrorMessage(response, `Failed to load habits (${response.status})`),
           )
-          throw new Error(message)
         }
 
-        const data = await response.json() //parse json data
-        setHabits(Array.isArray(data) ? data : []) //store in habits/update habits list with setbabits
+        const data = await response.json()
+        setHabits(Array.isArray(data) ? data : [])
       } catch (error) {
-        setApiError(error.message || "Failed to load habits") //displaying error message
+        setApiError(error.message || "Failed to load habits")
       } finally {
-        setIsLoading(false) //not loading
+        setIsLoading(false)
       }
     }
 
-    fetchHabits() //call habits
+    fetchHabits()
   }, [])
 
-  // Toggle today's completion and persist to backend.
   const handleToggleComplete = async (id) => {
-    const targetHabit = habits.find((habit) => habit.id === id) //loop through habits to find habit with that id
+    const targetHabit = habits.find((habit) => habit.id === id)
     if (!targetHabit) {
-      return //if not found
+      return
     }
 
-    const nextCompletedToday = !targetHabit.completedToday //button to flip completed today
+    const nextCompletedToday = !targetHabit.completedToday
     const nextProgressPercent = nextCompletedToday
-      ? Math.min(100, Number(targetHabit.progressPercent || 0) + 10) //if completed today, add 10 but never go past 100
-      : Math.max(0, Number(targetHabit.progressPercent || 0) - 10) // if not completed delete 10 but never go past 100
+      ? Math.min(100, Number(targetHabit.progressPercent || 0) + 10)
+      : Math.max(0, Number(targetHabit.progressPercent || 0) - 10)
 
     const payload = {
       completedToday: nextCompletedToday,
       progressPercent: nextProgressPercent,
     }
 
-    // for updating some fields in the habits
     try {
-      const response = await fetch(`/api/habits/${id}`, {
-        method: "PATCH", //not the whole habit
+      // This keeps the checkbox state and progress bar moving together from one backend update.
+      const response = await authFetch(`/api/habits/${id}`, {
+        method: "PATCH",
         headers: {
-          "Content-Type": "application/json", //send json
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload), //convert paybload to json
+        body: JSON.stringify(payload),
       })
 
-      //if failed trhow error
       if (!response.ok) {
-        const message = await getApiErrorMessage(
-          response,
-          `Failed to update habit (${response.status})`,
+        throw new Error(
+          await getApiErrorMessage(response, `Failed to update habit (${response.status})`),
         )
-        throw new Error(message)
       }
-      
-      //save updated json in variable
+
       const updatedHabit = await response.json()
       setHabits((prev) => prev.map((habit) => (habit.id === id ? updatedHabit : habit)))
-      setApiError("") //set habits to updated one
+      setApiError("")
     } catch (error) {
       setApiError(error.message || "Failed to update habit")
     }
   }
 
-  // Open form for creating a new habit.
   const handleAddClick = () => {
     setFormMode("add")
     setEditingHabitId(null)
     setIsFormOpen(true)
   }
 
-  // Open form for editing a selected habit.
   const handleEdit = (id) => {
     setFormMode("edit")
     setEditingHabitId(id)
     setIsFormOpen(true)
   }
 
-  // Remove a habit card from backend and local state.
   const handleDelete = async (id) => {
-    //delete method
     try {
-      const response = await fetch(`/api/habits/${id}`, {
+      const response = await authFetch(`/api/habits/${id}`, {
         method: "DELETE",
       })
 
       if (!response.ok) {
-        const message = await getApiErrorMessage(
-          response,
-          `Failed to delete habit (${response.status})`,
+        throw new Error(
+          await getApiErrorMessage(response, `Failed to delete habit (${response.status})`),
         )
-        throw new Error(message)
       }
 
-      setHabits((prev) => prev.filter((habit) => habit.id !== id)) //keep all habits except the deleted one
-      setApiError("") //clear error
+      setHabits((prev) => prev.filter((habit) => habit.id !== id))
+      setApiError("")
     } catch (error) {
       setApiError(error.message || "Failed to delete habit")
     }
   }
 
-  // Persist add/edit form results into backend and local state.
   const handleSubmitForm = async (values) => {
     const isEdit = formMode === "edit" && editingHabitId !== null
     const endpoint = isEdit ? `/api/habits/${editingHabitId}` : HABITS_API_BASE
-    const method = isEdit ? "PATCH" : "POST" 
+    const method = isEdit ? "PATCH" : "POST"
 
-    //object copying all values
+    // Normalize the form values before they leave the client so the API gets predictable types.
     const payload = {
       ...values,
       streak: Number(values.streak) || 0,
@@ -198,8 +147,9 @@ function HabitsPage() {
     }
 
     try {
-      const response = await fetch(endpoint, {
-        method, //patch or post depending on whther editing or not
+      // One submit path handles both create and edit; the endpoint and method carry that distinction.
+      const response = await authFetch(endpoint, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -207,23 +157,21 @@ function HabitsPage() {
       })
 
       if (!response.ok) {
-        const message = await getApiErrorMessage(
-          response,
-          `Failed to save habit (${response.status})`,
+        throw new Error(
+          await getApiErrorMessage(response, `Failed to save habit (${response.status})`),
         )
-        throw new Error(message)
       }
 
-      const savedHabit = await response.json() //saved habit/changed
+      const savedHabit = await response.json()
 
-      if (isEdit) { //replace changed habit wiht new one and save in habits-patch
+      if (isEdit) {
         setHabits((prev) =>
           prev.map((habit) => (habit.id === editingHabitId ? savedHabit : habit)),
         )
-      } else { //just append to the habits list-post
+      } else {
         setHabits((prev) => [...prev, savedHabit])
       }
-      //reset states for forms, errors
+
       setIsFormOpen(false)
       setEditingHabitId(null)
       setFormMode("add")
@@ -233,14 +181,12 @@ function HabitsPage() {
     }
   }
 
-  //CANCEL button- reset states
   const handleCancelForm = () => {
     setIsFormOpen(false)
     setEditingHabitId(null)
     setFormMode("add")
   }
 
-  //UI wrapper ***AI aided**
   return (
     <main className="mx-auto w-full max-w-5xl px-4 py-6">
       <header className="mb-6 flex flex-wrap items-center justify-between gap-3">
@@ -249,7 +195,6 @@ function HabitsPage() {
           <p className="mt-1 text-sm text-gray-600">Manage all your habits</p>
         </div>
 
-        {/* Add option for creating a new habit. */}
         <button
           type="button"
           onClick={handleAddClick}
@@ -265,7 +210,7 @@ function HabitsPage() {
         </p>
       ) : null}
 
-      {isFormOpen && (
+      {isFormOpen ? (
         <section className="mb-6">
           <HabitForm
             key={`${formMode}-${editingHabitId ?? "new"}`}
@@ -275,13 +220,12 @@ function HabitsPage() {
             onCancel={handleCancelForm}
           />
         </section>
-      )}
+      ) : null}
 
       <section className="mb-6 rounded-xl border border-gray-200 bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm font-medium text-gray-700">Filters:</span>
 
-          {/* Status filter: all habits vs completion state. */}
           <div className="flex flex-wrap gap-2">
             {["All habits", "Completed", "Missed"].map((option) => (
               <button
@@ -299,7 +243,6 @@ function HabitsPage() {
             ))}
           </div>
 
-          {/* Frequency filter: daily or weekly habits. */}
           <div className="ml-auto flex flex-wrap gap-2">
             {["All", "Daily", "Weekly"].map((option) => (
               <button
@@ -319,7 +262,6 @@ function HabitsPage() {
         </div>
       </section>
 
-      {/* Card grid. Falls back to an empty-state message when nothing matches. */}
       <section className="grid gap-4 sm:grid-cols-2">
         {isLoading ? (
           <p className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-gray-600 sm:col-span-2">
