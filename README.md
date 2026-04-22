@@ -64,7 +64,6 @@ Protected backend endpoints use the Bearer token sent from the frontend.
 
 - `/habits/`
 - `/goals/`
-- `/reminders/`
 - `/user/`
 
 ## Notes
