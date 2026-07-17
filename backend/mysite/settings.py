@@ -118,9 +118,16 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
+# Default primary key field type
 REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": (
         "rest_framework.authentication.SessionAuthentication",
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
 }
+
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend" # for development, prints emails to console
+DEFAULT_FROM_EMAIL = "noreply@habittracker.local"
+
+# Used to build password reset links that point at the React frontend (Vite dev server).
+FRONTEND_URL = "http://localhost:5173"

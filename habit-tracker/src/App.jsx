@@ -1,8 +1,10 @@
 import React from "react"
 import { Navigate, Route, Routes } from "react-router-dom"
+import ForgotPassword from "./auth/ForgotPassword.jsx"
 import Login from "./auth/login.jsx"
 import ProtectedRoute from "./auth/ProtectedRoute.jsx"
 import Register from "./auth/register.jsx"
+import ResetPassword from "./auth/ResetPassword.jsx"
 import { useAuth } from "./auth/AuthContext.jsx"
 import Navbar from "./components/Navbar.jsx"
 import GoalsPage from "./pages/GoalsPage"
@@ -27,6 +29,14 @@ function App() {
         <Route
           path="/register"
           element={isAuthenticated ? <Navigate to="/habits" replace /> : <Register />}
+        />
+        <Route
+          path="/forgot-password"
+          element={isAuthenticated ? <Navigate to="/habits" replace /> : <ForgotPassword />}
+        />
+        <Route
+          path="/reset-password/:uid/:token"
+          element={isAuthenticated ? <Navigate to="/habits" replace /> : <ResetPassword />}
         />
         {/* Everything nested here assumes the user already passed through login. */}
         <Route element={<ProtectedRoute />}>
