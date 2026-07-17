@@ -70,3 +70,30 @@ Protected backend endpoints use the Bearer token sent from the frontend.
 
 - The frontend app lives in `habit-tracker/README.md` for Vite-specific details.
 - If PowerShell blocks `npm`, run it through `cmd /c npm ...` or adjust your execution policy.
+
+## Fall 26 project:
+Physical Habit Completion Button
+
+Problem: Users forget to log habits.
+
+Solution:
+- Arduino + button
+- Press button when you finish a habit
+- Arduino sends request to Django API
+- Habit automatically marked complete
+
+## Example:
+Finished workout
+      ↓
+Press button
+      ↓
+Arduino WiFi
+      ↓
+Django API
+      ↓
+Workout marked complete
+
+Stack:
+
+ESP32 (better than Arduino Uno because it has WiFi)
+Django REST Framework
