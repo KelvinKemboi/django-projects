@@ -1,21 +1,21 @@
 import React, { useState } from "react"
-import { Link, useLocation, useNavigate } from "react-router-dom"
-import { useAuth } from "./AuthContext.jsx"
+import { Link, useNavigate, useParams } from "react-router-dom"
 import { getApiErrorMessage } from "../lib/api.js"
 
-const LOGIN_API = "/api/login/"
+const RESET_PASSWORD_CONFIRM_API = "/api/reset-password-confirm/"
 
-function Login() {
+// ResetPassword component handles the password reset confirmation process
+function ResetPassword() {
+  const { uid, token } = useParams() // Extract uid and token from the URL parameters
   const navigate = useNavigate()
-  const location = useLocation()
-  const { login } = useAuth()
   const [formData, setFormData] = useState({
-    username: "",
     password: "",
+    confirmPassword: "",
   })
   const [apiError, setApiError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
 
+  // Handle input changes for the password and confirm password fields
   const handleChange = (event) => {
     const { name, value } = event.target
     setFormData((prev) => ({
@@ -24,50 +24,49 @@ function Login() {
     }))
   }
 
+  // Handle form submission for resetting the password
   const handleSubmit = async (event) => {
     event.preventDefault()
     setApiError("")
+
+    if (formData.password !== formData.confirmPassword) {
+      setApiError("Passwords do not match")
+      return
+    }
+
     setIsSubmitting(true)
 
     try {
-      // The login endpoint is SimpleJWT, so the response should include fresh access and refresh tokens.
-      const response = await fetch(LOGIN_API, {
+     // Send a POST request to the reset password confirmation API with the uid, token, and new password
+      const response = await fetch(RESET_PASSWORD_CONFIRM_API, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({ uid, token, password: formData.password }),
       })
 
+      //  Check if the response is not OK
       if (!response.ok) {
         throw new Error(
-          await getApiErrorMessage(response, `Failed to log in (${response.status})`),
+          await getApiErrorMessage(response, `Failed to reset password (${response.status})`),
         )
       }
 
-      const data = await response.json()
-      login({
-        access: data.access,
-        refresh: data.refresh,
-        username: formData.username.trim(),
-      })
-
-      // If the user came from a blocked route, return them there instead of always forcing /habits.
-      const redirectPath = location.state?.from?.pathname || "/habits"
-      navigate(redirectPath, { replace: true })
+      // A fresh password means the user should sign back in with it explicitly.
+      navigate("/login", { replace: true })
     } catch (error) {
-      setApiError(error.message || "Failed to log in")
+      setApiError(error.message || "Failed to reset password")
     } finally {
       setIsSubmitting(false)
     }
   }
+
   return (
     <main className="mx-auto flex min-h-[calc(100vh-80px)] w-full max-w-md items-center px-4 py-8">
       <section className="w-full rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h1 className="text-2xl font-bold text-gray-900">Log in</h1>
-        <p className="mt-2 text-sm text-gray-600">
-          Sign in to manage your habits and goals with your own account.
-        </p>
+        <h1 className="text-2xl font-bold text-gray-900">Reset password</h1>
+        <p className="mt-2 text-sm text-gray-600">Enter a new password for your account.</p>
 
         {apiError ? (
           <div className="mt-4 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
@@ -77,50 +76,43 @@ function Login() {
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
           <label className="block text-sm text-gray-700">
-            Username
-            <input
-              type="text"
-              name="username"
-              value={formData.username}
-              onChange={handleChange}
-              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-              autoComplete="username"
-              required
-            />
-          </label>
-
-          <label className="block text-sm text-gray-700">
-            Password
+            New password
             <input
               type="password"
               name="password"
               value={formData.password}
               onChange={handleChange}
               className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
-              autoComplete="current-password"
+              autoComplete="new-password"
               required
             />
           </label>
 
-          <p className="text-right text-sm">
-            <Link to="/forgot-password" className="font-medium text-blue-700 hover:text-blue-800">
-              Forgot password?
-            </Link>
-          </p>
+          <label className="block text-sm text-gray-700">
+            Confirm new password
+            <input
+              type="password"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleChange}
+              className="mt-1 w-full rounded-md border border-gray-300 px-3 py-2"
+              autoComplete="new-password"
+              required
+            />
+          </label>
 
           <button
             type="submit"
             disabled={isSubmitting}
             className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-blue-300"
           >
-            {isSubmitting ? "Logging in..." : "Log in"}
+            {isSubmitting ? "Resetting..." : "Reset password"}
           </button>
         </form>
 
         <p className="mt-4 text-sm text-gray-600">
-          Need an account?{" "}
-          <Link to="/register" className="font-medium text-blue-700 hover:text-blue-800">
-            Register
+          <Link to="/login" className="font-medium text-blue-700 hover:text-blue-800">
+            Back to log in
           </Link>
         </p>
       </section>
@@ -128,4 +120,4 @@ function Login() {
   )
 }
 
-export default Login
+export default ResetPassword
