@@ -82,18 +82,3 @@ Solution:
 - Arduino sends request to Django API
 - Habit automatically marked complete
 
-## Example:
-Finished workout
-      ↓
-Press button
-      ↓
-Arduino WiFi
-      ↓
-Django API
-      ↓
-Workout marked complete
-
-Stack:
-
-ESP32 (better than Arduino Uno because it has WiFi)
-Django REST Framework
